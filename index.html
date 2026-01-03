@@ -567,10 +567,82 @@
             heartCounter = 0;
         });
     </script>
+    <!--Musica aqui abajo coño coño-->
+    <!-- MÚSICA DE FONDO -->
+<audio id="backgroundMusic" loop autoplay style="display:none">
+    <source src="musica.mp3" type="audio/mpeg">
+</audio>
+<script>
+// Configuración simple de música
+const music = document.getElementById('backgroundMusic');
+music.volume = 0.3;
 
+// Reproducir (maneja bloqueos de auto-play)
+music.play().catch(() => {
+    document.addEventListener('click', () => music.play(), {once:true});
+});
+
+// Control de volumen simple
+document.getElementById('volControl').addEventListener('click', (e) => {
+    e.stopPropagation();
+    if(music.volume > 0) {
+        music.volume = 0;
+        e.target.innerHTML = '🔇';
+    } else {
+        music.volume = 0.3;
+        e.target.innerHTML = '♪';
+    }
+});
+</script>
+<!-- AGREGA ESTO AL FINAL DE TU <body> -->
+<audio id="musicaFondo" loop style="display: none;">
+    <source src="musica.mp4" type="audio/mpeg">
+</audio>
+
+<script>
+// SOLO ESTE SCRIPT
+const musica = document.getElementById('musicaFondo');
+
+// Configurar volumen (30% por defecto)
+musica.volume = 0.3;
+
+// Función para iniciar reproducción
+function iniciarMusica() {
+    // Intentar reproducir
+    const promesa = musica.play();
+    
+    // Manejar posibles errores de auto-play
+    if (promesa !== undefined) {
+        promesa.catch(error => {
+            // Si falla por políticas del navegador, esperar interacción del usuario
+            console.log("Esperando interacción del usuario para iniciar música...");
+            
+            // Reproducir al primer clic/touch
+            const iniciarAlInteractuar = () => {
+                musica.play();
+                // Remover listeners después de iniciar
+                document.removeEventListener('click', iniciarAlInteractuar);
+                document.removeEventListener('touchstart', iniciarAlInteractuar);
+            };
+            
+            document.addEventListener('click', iniciarAlInteractuar);
+            document.addEventListener('touchstart', iniciarAlInteractuar);
+        });
+    }
+}
+
+// Esperar a que la página cargue
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', iniciarMusica);
+} else {
+    iniciarMusica();
+}
+
+// Asegurar que continúe en bucle
+musica.addEventListener('ended', function() {
+    this.currentTime = 0;
+    this.play();
+});
+</script>
 </body>
-
 </html>
-
-
-
