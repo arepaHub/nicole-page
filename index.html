@@ -567,82 +567,151 @@
             heartCounter = 0;
         });
     </script>
-    <!--Musica aqui abajo coño coño-->
-    <!-- MÚSICA DE FONDO -->
-<audio id="backgroundMusic" loop autoplay style="display:none">
+<!-- MÚSICA - REEMPLAZA TODO LO ANTERIOR -->
+<audio id="musicaFondo" loop preload="auto" style="display:none">
     <source src="musica.mp3" type="audio/mpeg">
 </audio>
-<script>
-// Configuración simple de música
-const music = document.getElementById('backgroundMusic');
-music.volume = 0.3;
 
-// Reproducir (maneja bloqueos de auto-play)
-music.play().catch(() => {
-    document.addEventListener('click', () => music.play(), {once:true});
-});
-
-// Control de volumen simple
-document.getElementById('volControl').addEventListener('click', (e) => {
-    e.stopPropagation();
-    if(music.volume > 0) {
-        music.volume = 0;
-        e.target.innerHTML = '🔇';
-    } else {
-        music.volume = 0.3;
-        e.target.innerHTML = '♪';
-    }
-});
-</script>
-<!-- AGREGA ESTO AL FINAL DE TU <body> -->
-<audio id="musicaFondo" loop style="display: none;">
-    <source src="musica.mp4" type="audio/mpeg">
-</audio>
+<!-- BOTÓN PARA INICIAR MÚSICA (Minimalista) -->
+<div id="iniciarMusicaBtn" style="
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(255, 20, 147, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+">
+    <i class="fas fa-music" style="color: white; font-size: 18px;"></i>
+</div>
 
 <script>
-// SOLO ESTE SCRIPT
-const musica = document.getElementById('musicaFondo');
-
-// Configurar volumen (30% por defecto)
-musica.volume = 0.3;
-
-// Función para iniciar reproducción
-function iniciarMusica() {
-    // Intentar reproducir
-    const promesa = musica.play();
+// ESPERA A QUE TODO CARGUE
+window.addEventListener('load', function() {
+    const audio = document.getElementById('musicaFondo');
+    const iniciarBtn = document.getElementById('iniciarMusicaBtn');
     
-    // Manejar posibles errores de auto-play
-    if (promesa !== undefined) {
-        promesa.catch(error => {
-            // Si falla por políticas del navegador, esperar interacción del usuario
-            console.log("Esperando interacción del usuario para iniciar música...");
+    if (!audio) return;
+    
+    // Configurar audio
+    audio.volume = 0.25; // Volumen bajo para móviles
+    audio.preload = 'auto';
+    
+    // FUNCIÓN PARA INICIAR MÚSICA
+    function iniciarMusica() {
+        console.log("Intentando reproducir música...");
+        
+        // Reproducir música
+        audio.play().then(() => {
+            console.log("✅ Música reproduciéndose");
+            // Ocultar botón después de iniciar
+            iniciarBtn.style.opacity = '0';
+            iniciarBtn.style.pointerEvents = 'none';
             
-            // Reproducir al primer clic/touch
-            const iniciarAlInteractuar = () => {
-                musica.play();
-                // Remover listeners después de iniciar
-                document.removeEventListener('click', iniciarAlInteractuar);
-                document.removeEventListener('touchstart', iniciarAlInteractuar);
-            };
+            // Desaparecer después de 2 segundos
+            setTimeout(() => {
+                iniciarBtn.style.display = 'none';
+            }, 2000);
             
-            document.addEventListener('click', iniciarAlInteractuar);
-            document.addEventListener('touchstart', iniciarAlInteractuar);
+        }).catch(error => {
+            console.log("❌ Error al reproducir:", error);
+            // Mostrar mensaje de ayuda
+            iniciarBtn.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: #ffcc00;"></i>';
+            iniciarBtn.title = "Toca para permitir audio";
+            
+            // Intentar de nuevo en 2 segundos
+            setTimeout(iniciarMusica, 2000);
         });
     }
-}
+    
+    // INICIAR AL HACER CLIC EN EL BOTÓN
+    iniciarBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        e.preventDefault();
+        
+        // Cambiar icono a "cargando"
+        this.innerHTML = '<i class="fas fa-spinner fa-spin" style="color: white;"></i>';
+        
+        // Esperar un momento y luego iniciar
+        setTimeout(iniciarMusica, 300);
+    });
+    
+    // TAMBIÉN INICIAR AL TOCAR CUALQUIER PARTE DE LA PÁGINA
+    document.addEventListener('click', function iniciarConClic(e) {
+        // No iniciar si se hizo clic en el botón específico
+        if (e.target.closest('#iniciarMusicaBtn')) return;
+        
+        console.log("Clic en la página, intentando reproducir...");
+        iniciarMusica();
+        
+        // Remover este listener después del primer clic
+        document.removeEventListener('click', iniciarConClic);
+    }, { once: true });
+    
+    // TAMBIÉN PARA MÓVILES (touch)
+    document.addEventListener('touchstart', function iniciarConTouch(e) {
+        if (e.target.closest('#iniciarMusicaBtn')) return;
+        
+        console.log("Touch en la página, intentando reproducir...");
+        iniciarMusica();
+        
+        document.removeEventListener('touchstart', iniciarConTouch);
+    }, { once: true });
+    
+    // INTENTAR REPRODUCIR AUTOMÁTICAMENTE DESPUÉS DE 1 SEGUNDO
+    setTimeout(function() {
+        if (!audio.paused) return; // Si ya está reproduciendo, no hacer nada
+        
+        console.log("Intentando auto-reproducción...");
+        audio.play().then(() => {
+            console.log("✅ Auto-reproducción exitosa");
+            iniciarBtn.style.display = 'none';
+        }).catch(error => {
+            console.log("🔄 Auto-reproducción falló, esperando interacción");
+            // Mostrar botón para que el usuario toque
+            iniciarBtn.style.opacity = '1';
+        });
+    }, 1000);
+    
+    // ASEGURAR QUE SIGA EN BUCLE
+    audio.addEventListener('ended', function() {
+        this.currentTime = 0;
+        this.play();
+    });
+    
+    // MANEJAR ERRORES DE AUDIO
+    audio.addEventListener('error', function(e) {
+        console.error("❌ Error de audio:", e);
+        iniciarBtn.innerHTML = '<i class="fas fa-times" style="color: #ff4444;"></i>';
+        iniciarBtn.title = "Error cargando la música";
+    });
+});
 
-// Esperar a que la página cargue
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', iniciarMusica);
-} else {
-    iniciarMusica();
-}
-
-// Asegurar que continúe en bucle
-musica.addEventListener('ended', function() {
-    this.currentTime = 0;
-    this.play();
+// FUNCIÓN DE RESPALDO - INTENTAR REPRODUCIR CON CUALQUIER INTERACCIÓN
+document.addEventListener('DOMContentLoaded', function() {
+    // Intentar reproducir con cualquier interacción posterior
+    const intentarReproducir = () => {
+        const audio = document.getElementById('musicaFondo');
+        if (audio && audio.paused) {
+            audio.play().catch(e => console.log("Falló reproducción posterior"));
+        }
+    };
+    
+    // Escuchar varias interacciones
+    ['click', 'touchstart', 'scroll', 'keydown'].forEach(evento => {
+        document.addEventListener(evento, intentarReproducir, { once: true });
+    });
 });
 </script>
 </body>
+
 </html>
