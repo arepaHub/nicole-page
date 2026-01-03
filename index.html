@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Para Ti</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: #000;
+            color: #fff;
+            min-height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            touch-action: manipulation;
+        }
+
+        .hearts-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .heart {
+            position: absolute;
+            color: rgba(255, 20, 147, 0.7);
+            font-size: 24px;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .heart.animate {
+            animation: floatUp 3s ease-out forwards;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0) scale(0.5);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh) scale(1);
+                opacity: 0;
+            }
+        }
+
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            z-index: 3;
+            padding: 20px;
+        }
+
+        .eye-frame {
+            /* Tamaño específico para 534x204 (relación 2.62:1) */
+            width: 85vw;
+            max-width: 534px;
+            height: calc(85vw * 0.382); /* 204/534 = 0.382 */
+            max-height: 204px;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 
+                0 0 40px rgba(255, 20, 147, 0.3),
+                inset 0 0 30px rgba(255, 20, 147, 0.15);
+            position: relative;
+            border-radius: 8px;
+            margin-bottom: 40px;
+        }
+
+        #eyeImage {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .quote-container {
+            text-align: center;
+            max-width: 534px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .quote-text {
+            color: #ffffff;
+            font-size: 1.8rem;
+            font-style: italic;
+            font-weight: 300;
+            letter-spacing: 1px;
+            text-shadow: 
+                0 0 20px rgba(255, 20, 147, 0.5),
+                0 2px 15px rgba(0, 0, 0, 0.7);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 2s ease, transform 2s ease;
+            line-height: 1.4;
+            padding: 0 15px;
+        }
+
+        .quote-text.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .letter-icon {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 100;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .letter-icon:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: scale(1.05);
+            border-color: rgba(255, 20, 147, 0.4);
+        }
+
+        .letter-icon i {
+            font-size: 22px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .letter-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s, visibility 0.5s;
+            backdrop-filter: blur(10px);
+        }
+
+        .letter-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .letter-content {
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            background: rgba(26, 26, 46, 0.9);
+            border-radius: 15px;
+            padding: 30px;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
+            transform: translateY(50px);
+            transition: transform 0.5s;
+            overflow-y: auto;
+        }
+
+        .letter-overlay.active .letter-content {
+            transform: translateY(0);
+        }
+
+        .close-letter {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 35px;
+            height: 35px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .close-letter:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .close-letter i {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 16px;
+        }
+
+        .letter-header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .letter-header h2 {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 1.6rem;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        .letter-text {
+            line-height: 1.8;
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.85);
+            text-align: justify;
+        }
+
+        .letter-text p {
+            margin-bottom: 20px;
+        }
+
+        .signature {
+            text-align: right;
+            margin-top: 30px;
+            font-style: italic;
+            color: rgba(255, 182, 193, 0.8);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 15px;
+        }
+
+        /* Responsive para móviles */
+        @media (max-width: 768px) {
+            .eye-frame {
+                width: 90vw;
+                max-width: 90vw;
+                height: calc(90vw * 0.382);
+                margin-bottom: 30px;
+            }
+            
+            .quote-text {
+                font-size: 1.5rem;
+            }
+            
+            .letter-content {
+                padding: 25px 20px;
+                width: 95%;
+            }
+            
+            .letter-icon {
+                bottom: 20px;
+                right: 20px;
+                width: 45px;
+                height: 45px;
+            }
+            
+            .letter-icon i {
+                font-size: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .quote-text {
+                font-size: 1.3rem;
+            }
+            
+            .eye-frame {
+                margin-bottom: 25px;
+            }
+        }
+
+        @media (max-height: 600px) {
+            .letter-content {
+                max-height: 70vh;
+            }
+            
+            .eye-frame {
+                max-height: 160px;
+                height: calc(85vw * 0.382);
+                margin-bottom: 20px;
+            }
+        }
+        
+        /* Para pantallas muy anchas */
+        @media (min-width: 1200px) {
+            .eye-frame {
+                max-width: 534px;
+                max-height: 204px;
+            }
+            
+            .quote-text {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Contenedor de corazones -->
+    <div class="hearts-container" id="heartsContainer"></div>
+    
+    <!-- Contenedor principal -->
+    <div class="main-container">
+        <!-- Marco de la imagen -->
+        <div class="eye-frame">
+            <!-- Imagen de los ojos -->
+            <img id="eyeImage" src="eyes.jpeg" alt="Tus ojos">
+        </div>
+        
+        <!-- Texto debajo de la foto -->
+        <div class="quote-container">
+            <div class="quote-text" id="quoteText">
+                "De los ojos que ando pendiente."
+            </div>
+        </div>
+    </div>
+    
+    <!-- Icono de carta minimalista -->
+    <div class="letter-icon" id="letterIcon">
+        <i class="fas fa-envelope"></i>
+    </div>
+    
+    <!-- Overlay de la carta -->
+    <div class="letter-overlay" id="letterOverlay">
+        <div class="letter-content">
+            <div class="close-letter" id="closeLetter">
+                <i class="fas fa-times"></i>
+            </div>
+            
+            <div class="letter-header">
+                <h2>Para Ti</h2>
+            </div>
+            
+            <div class="letter-text" id="letterText">
+                <p>Por un 2026 en el que me permita seguir conociendote y en el que los te quiero escalen a un te amo con el pasar del tiempo y los ratos que pase rozando tu mano.</p>
+                <p2>Att: Justin Oropeza </p2>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let heartCounter = 0;
+        const maxHearts = 100;
+        
+        // Crear corazones automáticamente
+        function createAutoHeart() {
+            const heartsContainer = document.getElementById('heartsContainer');
+            
+            // Limpiar corazones viejos si hay demasiados
+            if (heartCounter >= maxHearts) {
+                const oldestHeart = heartsContainer.firstChild;
+                if (oldestHeart) {
+                    heartsContainer.removeChild(oldestHeart);
+                    heartCounter--;
+                }
+            }
+            
+            const heart = document.createElement('div');
+            heart.classList.add('heart');
+            heart.innerHTML = '<i class="fas fa-heart"></i>';
+            
+            // Posición aleatoria en la parte inferior
+            const x = Math.random() * window.innerWidth;
+            const y = window.innerHeight + 50; // Empezar desde abajo
+            
+            heart.style.left = `${x}px`;
+            heart.style.top = `${y}px`;
+            
+            // Tamaño aleatorio
+            const size = Math.random() * 30 + 20;
+            heart.style.fontSize = `${size}px`;
+            
+            // Color aleatorio
+            const colors = ['#ff1493', '#ff69b4', '#ff85a2', '#ffb6c1', '#ff4081'];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            heart.style.color = randomColor;
+            
+            // Agregar al contenedor
+            heartsContainer.appendChild(heart);
+            heartCounter++;
+            
+            // Iniciar animación
+            setTimeout(() => {
+                heart.classList.add('animate');
+            }, 10);
+            
+            // Eliminar después de la animación
+            setTimeout(() => {
+                if (heart.parentNode) {
+                    heart.parentNode.removeChild(heart);
+                    heartCounter--;
+                }
+            }, 3000);
+        }
+        
+        // Crear corazones al tocar
+        function createTouchHeart(x, y) {
+            const heartsContainer = document.getElementById('heartsContainer');
+            
+            if (heartCounter >= maxHearts) {
+                const oldestHeart = heartsContainer.firstChild;
+                if (oldestHeart) {
+                    heartsContainer.removeChild(oldestHeart);
+                    heartCounter--;
+                }
+            }
+            
+            const heart = document.createElement('div');
+            heart.classList.add('heart');
+            heart.innerHTML = '<i class="fas fa-heart"></i>';
+            
+            // Posición del toque
+            heart.style.left = `${x}px`;
+            heart.style.top = `${y}px`;
+            
+            // Tamaño más grande para toques
+            const size = Math.random() * 40 + 30;
+            heart.style.fontSize = `${size}px`;
+            
+            // Color más brillante para toques
+            const colors = ['#ff1493', '#ff69b4', '#ff4081'];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            heart.style.color = randomColor;
+            
+            heartsContainer.appendChild(heart);
+            heartCounter++;
+            
+            // Iniciar animación
+            setTimeout(() => {
+                heart.classList.add('animate');
+            }, 10);
+            
+            // Eliminar después
+            setTimeout(() => {
+                if (heart.parentNode) {
+                    heart.parentNode.removeChild(heart);
+                    heartCounter--;
+                }
+            }, 3000);
+        }
+        
+        // Manejar toques/clics
+        function handleTouch(event) {
+            event.preventDefault();
+            
+            let x, y;
+            
+            if (event.type === 'touchstart') {
+                x = event.touches[0].clientX;
+                y = event.touches[0].clientY;
+            } else {
+                x = event.clientX;
+                y = event.clientY;
+            }
+            
+            // Crear 3-5 corazones en cada toque
+            const heartCount = Math.floor(Math.random() * 3) + 3;
+            
+            for (let i = 0; i < heartCount; i++) {
+                const offsetX = (Math.random() - 0.5) * 80;
+                const offsetY = (Math.random() - 0.5) * 80;
+                
+                setTimeout(() => {
+                    createTouchHeart(x + offsetX, y + offsetY);
+                }, i * 100);
+            }
+        }
+        
+        // Manejar la carta
+        function setupLetter() {
+            const letterIcon = document.getElementById('letterIcon');
+            const letterOverlay = document.getElementById('letterOverlay');
+            const closeLetter = document.getElementById('closeLetter');
+            
+            // Abrir carta
+            letterIcon.addEventListener('click', function() {
+                letterOverlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            });
+            
+            // Cerrar carta
+            closeLetter.addEventListener('click', function() {
+                letterOverlay.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            });
+            
+            // Cerrar al tocar fuera
+            letterOverlay.addEventListener('click', function(e) {
+                if (e.target === letterOverlay) {
+                    letterOverlay.classList.remove('active');
+                    document.body.style.overflow = 'auto';
+                }
+            });
+        }
+        
+        // Mostrar texto con animación
+        function showText() {
+            const quoteText = document.getElementById('quoteText');
+            setTimeout(() => {
+                quoteText.classList.add('visible');
+            }, 800);
+        }
+        
+        // Efecto de entrada para la imagen
+        function animateImage() {
+            const eyeFrame = document.querySelector('.eye-frame');
+            eyeFrame.style.opacity = '0';
+            eyeFrame.style.transform = 'scale(0.9) translateY(20px)';
+            
+            setTimeout(() => {
+                eyeFrame.style.transition = 'opacity 1.2s ease, transform 1.2s ease';
+                eyeFrame.style.opacity = '1';
+                eyeFrame.style.transform = 'scale(1) translateY(0)';
+            }, 300);
+        }
+        
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            setupLetter();
+            animateImage();
+            showText();
+            
+            // Configurar eventos de toque
+            document.addEventListener('touchstart', handleTouch);
+            document.addEventListener('click', handleTouch);
+            
+            // Crear corazones automáticos
+            setInterval(() => {
+                createAutoHeart();
+            }, 800);
+            
+            // Crear corazones iniciales
+            for (let i = 0; i < 8; i++) {
+                setTimeout(() => {
+                    createAutoHeart();
+                }, i * 250);
+            }
+        });
+        
+        // Limpiar corazones al cambiar tamaño
+        window.addEventListener('resize', function() {
+            const heartsContainer = document.getElementById('heartsContainer');
+            while (heartsContainer.firstChild) {
+                heartsContainer.removeChild(heartsContainer.firstChild);
+            }
+            heartCounter = 0;
+        });
+    </script>
+    <!--Musica aqui abajo coño coño-->
+    <!-- MÚSICA DE FONDO -->
+<audio id="backgroundMusic" loop autoplay style="display:none">
+    <source src="musica.mp3" type="audio/mpeg">
+</audio>
+<script>
+// Configuración simple de música
+const music = document.getElementById('backgroundMusic');
+music.volume = 0.3;
+
+// Reproducir (maneja bloqueos de auto-play)
+music.play().catch(() => {
+    document.addEventListener('click', () => music.play(), {once:true});
+});
+
+// Control de volumen simple
+document.getElementById('volControl').addEventListener('click', (e) => {
+    e.stopPropagation();
+    if(music.volume > 0) {
+        music.volume = 0;
+        e.target.innerHTML = '🔇';
+    } else {
+        music.volume = 0.3;
+        e.target.innerHTML = '♪';
+    }
+});
+</script>
+<!-- AGREGA ESTO AL FINAL DE TU <body> -->
+<audio id="musicaFondo" loop style="display: none;">
+    <source src="musica.mp4" type="audio/mpeg">
+</audio>
+
+<script>
+// SOLO ESTE SCRIPT
+const musica = document.getElementById('musicaFondo');
+
+// Configurar volumen (30% por defecto)
+musica.volume = 0.3;
+
+// Función para iniciar reproducción
+function iniciarMusica() {
+    // Intentar reproducir
+    const promesa = musica.play();
+    
+    // Manejar posibles errores de auto-play
+    if (promesa !== undefined) {
+        promesa.catch(error => {
+            // Si falla por políticas del navegador, esperar interacción del usuario
+            console.log("Esperando interacción del usuario para iniciar música...");
+            
+            // Reproducir al primer clic/touch
+            const iniciarAlInteractuar = () => {
+                musica.play();
+                // Remover listeners después de iniciar
+                document.removeEventListener('click', iniciarAlInteractuar);
+                document.removeEventListener('touchstart', iniciarAlInteractuar);
+            };
+            
+            document.addEventListener('click', iniciarAlInteractuar);
+            document.addEventListener('touchstart', iniciarAlInteractuar);
+        });
+    }
+}
+
+// Esperar a que la página cargue
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', iniciarMusica);
+} else {
+    iniciarMusica();
+}
+
+// Asegurar que continúe en bucle
+musica.addEventListener('ended', function() {
+    this.currentTime = 0;
+    this.play();
+});
+</script>
+</body>
+</html>
