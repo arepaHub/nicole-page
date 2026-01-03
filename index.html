@@ -567,42 +567,10 @@
             heartCounter = 0;
         });
     </script>
-<!-- SOLO ESTO NECESITAS -->
-<audio id="bgSound" loop style="display:none">
-    <source src="musica.mp3" type="audio/mpeg">
-</audio>
 
-<button onclick="startSound()" style="
-    position:fixed; bottom:25px; left:25px;
-    background:#ff1493; color:white; border:none;
-    padding:12px 20px; border-radius:20px;
-    font-size:16px; cursor:pointer; z-index:1000;
-    box-shadow:0 4px 10px rgba(0,0,0,0.3);
-">
-    🔊 Activar Sonido
-</button>
-
-<script>
-const audio = document.getElementById('bgSound');
-audio.volume = 0.3;
-
-function startSound() {
-    // Reproducir audio
-    audio.play().then(() => {
-        // Éxito: ocultar botón
-        document.querySelector('button[onclick="startSound()"]').style.display = 'none';
-    }).catch(error => {
-        // Error: instrucciones claras
-        alert("⚠️ Para escuchar la música:\n\n1. Permite el audio en tu navegador\n2. Sube el volumen de tu teléfono\n3. Toca de nuevo el botón");
-    });
-}
-
-// También iniciar al tocar la página
-document.addEventListener('click', startSound, { once: true });
-document.addEventListener('touchstart', startSound, { once: true });
-</script>
 </body>
 
 </html>
+
 
 
